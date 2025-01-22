@@ -271,7 +271,7 @@ function station_status($ip, $last_seen) {
         }
         
         if (status["out_status"] == 0) {
-            outside_status.innerHTML = "Updated "+in_delta.toFixed(0)+"s ago";
+            outside_status.innerHTML = "Updated "+out_delta.toFixed(0)+"s ago";
             if (out_delta > 600) {
                 outside_status.style.backgroundColor = "rgb(224, 195, 76)";
             } else {
