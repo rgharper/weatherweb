@@ -2,16 +2,16 @@
 include_once("config.php");
 error_reporting(E_ALL); ini_set('display_errors', '1');
 
-$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.weather WHERE stationId=\"Inside1\" AND timestamp >= NOW() - INTERVAL 1 YEAR AND temperature IS NOT NULL ORDER BY temperature DESC LIMIT 1");
+$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Inside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature DESC LIMIT 1");
 $imax_temp = mysqli_fetch_assoc($result);
 
-$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.weather WHERE stationId=\"Inside1\" AND timestamp >= NOW() - INTERVAL 1 YEAR AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
+$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Inside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
 $imin_temp = mysqli_fetch_assoc($result);
 
-$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.weather WHERE stationId=\"Outside1\" AND timestamp >= NOW() - INTERVAL 1 YEAR AND temperature IS NOT NULL ORDER BY temperature DESC LIMIT 1");
+$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Outside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature DESC LIMIT 1");
 $omax_temp = mysqli_fetch_assoc($result);
 
-$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.weather WHERE stationId=\"Outside1\" AND timestamp >= NOW() - INTERVAL 1 YEAR AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
+$result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Outside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
 $omin_temp = mysqli_fetch_assoc($result);
 
 $result = mysqli_query($mysqli, "SELECT timestamp FROM weatherstation.weather WHERE stationId=\"Inside1\" ORDER BY timestamp DESC LIMIT 1");
