@@ -136,8 +136,9 @@
             chart.destroy();
             chart = newchart();
         }
+        update(chart);
         loggingid = setInterval(function(){update(chart)}, portable_interval.value*1000);
-
+        // blank = false;
     }
 </script>
 </html>
