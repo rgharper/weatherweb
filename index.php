@@ -14,12 +14,6 @@ $omax_temp = mysqli_fetch_assoc($result);
 $result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Outside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
 $omin_temp = mysqli_fetch_assoc($result);
 
-$result = mysqli_query($mysqli, "SELECT timestamp FROM weatherstation.weather WHERE stationId=\"Inside1\" ORDER BY timestamp DESC LIMIT 1");
-$imost_recent = mysqli_fetch_assoc($result);
-
-$result = mysqli_query($mysqli, "SELECT timestamp FROM weatherstation.weather WHERE stationId=\"Outside1\" ORDER BY timestamp DESC LIMIT 1");
-$omost_recent = mysqli_fetch_assoc($result);
-
 $result = mysqli_query($mysqli, "SELECT NOW() - INTERVAL 1 YEAR");
 $year_ago = mysqli_fetch_assoc($result);
 
@@ -74,12 +68,9 @@ function station_status($ip, $last_seen) {
                 Inside
             </div>
             <div class="fadebox" id="in_temperature" style="animation-delay: 250ms">
-                <?php echo round((float)file_get_contents("$inside_api/temperature"), 2);?>&deg;C
             </div>
             <div class="fadebox" id="in_humidity" style="animation-delay: 500ms">
-                <?php echo round((float)file_get_contents("$inside_api/humidity"), 2);?>%
             </div>
-            <!-- <?php echo station_status("192.168.1.164", end($imost_recent))?> -->
             <div id="inside_status" class="indicator"> </div>
         </stat-column>
         <stat-column>
@@ -87,10 +78,8 @@ function station_status($ip, $last_seen) {
                 Outside
             </div>
             <div class="fadebox" id="out_temperature" style="animation-delay: 500ms">
-                <?php echo round((float)file_get_contents("$outside_api/temperature"), 2);?>&deg;C
             </div>
             <div class="fadebox" id="out_humidity" style="animation-delay: 750ms">
-                <?php echo round((float)file_get_contents("$outside_api/humidity"), 2);?>%
             </div>
             <div id="outside_status" class="indicator"> </div>
         </stat-column>
