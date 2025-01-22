@@ -1,3 +1,4 @@
+function update_charts() {
 console.time("loadCharts.js");
 var startTimer = performance.now();
 fetch("chartData.php")
@@ -188,3 +189,4 @@ fetch("chartData.php")
         // This is where you handle errors.
 });
 console.timeEnd("loadCharts.js");
+}

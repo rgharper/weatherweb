@@ -7,11 +7,9 @@ console.log(rpmA, rpmB,)
 // rpmA.addEventListener("change", onchange, false);
 // rpmB.addEventListener("change", onchange, false);
 
-function onchange() {
+function update_visualiser() {
   var duration = 60 / rpmA.textContent;
   spinnerA.style.animationDuration = duration + 's';
   var duration = 60 / rpmB.textContent;
   spinnerB.style.animationDuration = duration + 's';
 }
-
-window.onload = onchange

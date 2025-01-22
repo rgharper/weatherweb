@@ -62,32 +62,37 @@ function station_status($ip, $last_seen) {
         <meta charset="utf-8">
         <link rel="icon" href="weather.svg" sizes="any" type="image/svg+xml">
     </head>
-    <?php include "nav.php"?>
+    <flex-frame>
+        <a href="index.php">Current</a>
+        <a href="historical.html">Historical</a>
+        <a href="extra.html">Extra</a>
+    </flex-frame>
     <br>
     <flex-frame>
         <stat-column>
             <div class="fadebox" style="animation-delay: 0ms">
                 Inside
             </div>
-            <div class="fadebox" style="animation-delay: 250ms">
+            <div class="fadebox" id="in_temperature" style="animation-delay: 250ms">
                 <?php echo round((float)file_get_contents("$inside_api/temperature"), 2);?>&deg;C
             </div>
-            <div class="fadebox" style="animation-delay: 500ms">
+            <div class="fadebox" id="in_humidity" style="animation-delay: 500ms">
                 <?php echo round((float)file_get_contents("$inside_api/humidity"), 2);?>%
             </div>
-            <?php echo station_status("192.168.1.164", end($imost_recent))?>
+            <!-- <?php echo station_status("192.168.1.164", end($imost_recent))?> -->
+            <div id="inside_status" class="indicator"> </div>
         </stat-column>
         <stat-column>
             <div class="fadebox" style="animation-delay: 250ms">
                 Outside
             </div>
-            <div class="fadebox" style="animation-delay: 500ms">
+            <div class="fadebox" id="out_temperature" style="animation-delay: 500ms">
                 <?php echo round((float)file_get_contents("$outside_api/temperature"), 2);?>&deg;C
             </div>
-            <div class="fadebox" style="animation-delay: 750ms">
+            <div class="fadebox" id="out_humidity" style="animation-delay: 750ms">
                 <?php echo round((float)file_get_contents("$outside_api/humidity"), 2);?>%
             </div>
-            <?php echo station_status("192.168.1.165", end($omost_recent))?>
+            <div id="outside_status" class="indicator"> </div>
         </stat-column>
         <stat-column>
             <div class="fadebox" style="animation-delay: 500ms">
@@ -96,24 +101,14 @@ function station_status($ip, $last_seen) {
             <div class="fadebox" style="animation-delay: 750ms">
                 <div id="spinnerA" class="spinner"></div>
                 <div id="rpmA" style="display: inline">
-                <?php echo round($wind_current[0], 1)?>
                 </div> rpm
             </div>
-            <div class="fadebox" style="animation-delay: 1000ms">
-                <?php
-                    $directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
-                    if ($wind_current[0]<1) {
-                        echo "CALM - n/a\u{00B0}";
-                    } else {
-                        echo $directions[(int)$wind_current[2]];
-                    }
-                ?>
+            <div class="fadebox" id="wind_dir" style="animation-delay: 1000ms">
             </div>
             <div class="fadebox" style="animation-delay: 1250ms">
                 <div id="spinnerB" class="spinner"></div>
                 Gust:
                 <div id="rpmB" style="display: inline">
-                <?php echo round($wind_current[1], 1)?>
                 </div> rpm
             </div>
         </stat-column>
@@ -201,4 +196,92 @@ function station_status($ip, $last_seen) {
             </stat-column>
         </flex-box>
     </plain-frame>
+<script>
+    insideip = "192.168.1.164:1100";
+    outsideip = "192.168.1.165:1100";
+    // stat updater
+    update();
+    update_charts();
+    setInterval(update, 1000);
+    async function update() {
+        // server must have cors enabled
+        // inside temperature
+        var response = await fetch("http://"+insideip+"/temperature");
+        var temperature = await response.text();
+        temperature = Number.parseFloat(temperature).toFixed(2);
+
+        document.getElementById("in_temperature").innerHTML = temperature+"&deg;C";
+
+        // inside humidity
+        var response = await fetch("http://"+insideip+"/humidity");
+        var humidity = await response.text();
+        humidity = Number.parseFloat(humidity).toFixed(2);
+
+        document.getElementById("in_humidity").innerHTML = humidity+"%";
+
+        // outside temperature
+        var response = await fetch("http://"+outsideip+"/temperature");
+        var temperature = await response.text();
+        temperature = Number.parseFloat(temperature).toFixed(2);
+
+        document.getElementById("out_temperature").innerHTML = temperature+"&deg;C";
+
+        // outside humidity
+        var response = await fetch("http://"+outsideip+"/humidity");
+        var humidity = await response.text();
+        humidity = Number.parseFloat(humidity).toFixed(2);
+
+        document.getElementById("out_humidity").innerHTML = humidity+"%";
+
+        // wind
+        var response = await fetch("http://"+outsideip+"/wind");
+        var wind = await response.text();
+        wind = wind.split(",");
+        document.getElementById("rpmA").innerHTML = Number.parseFloat(wind[0]).toFixed(2);
+        document.getElementById("rpmB").innerHTML = Number.parseFloat(wind[1]).toFixed(2);
+
+        const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+        if (wind[0]<1) {
+            document.getElementById("wind_dir").innerHTML = "CALM";
+        } else {
+            document.getElementById("wind_dir").innerHTML = directions[wind[2]];
+        }
+        update_visualiser();
+
+        // station status
+        var response = await fetch("stationStatus.php");
+        var status = await response.json();
+        in_delta = (Date.now()/1000) - status["in_last_update"];
+        out_delta = (Date.now()/1000) - status["out_last_update"];
+
+        if (in_delta.toFixed(0) >= 600 || out_delta.toFixed(0) >= 600) {
+            update_charts();
+        }
+
+        if (status["in_status"] == 0) {
+            inside_status.innerHTML = "Updated "+in_delta.toFixed(0)+"s ago";
+            if (in_delta > 600) {
+                inside_status.style.backgroundColor = "rgb(224, 195, 76)";
+            } else {
+                inside_status.style.backgroundColor = "rgb(126, 199, 119)";
+            }
+        } else {
+            inside_status.innerHTML = "Offline";
+            inside_status.style.backgroundColor = "rgb(212, 93, 93)";
+        }
+        
+        if (status["out_status"] == 0) {
+            outside_status.innerHTML = "Updated "+in_delta.toFixed(0)+"s ago";
+            if (out_delta > 600) {
+                outside_status.style.backgroundColor = "rgb(224, 195, 76)";
+            } else {
+                outside_status.style.backgroundColor = "rgb(126, 199, 119)";
+            }
+        } else {
+            outside_status.innerHTML = "Offline";
+            outside_status.style.backgroundColor = "rgb(212, 93, 93)";
+        }
+    }
+</script>
+
 </html>
