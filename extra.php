@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Weather Station</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="weather.svg" sizes="any" type="image/svg+xml">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" integrity="sha512-ZwR1/gSZM3ai6vCdI+LVF1zSq/5HznD3ZSTk7kajkaj4D292NLuduDCO1c/NT8Id+jE58KYLKT7hXnbtryGmMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+
+<body>
+    <?php include "nav.php" ?>
+    <h1 class=heading>Portable Station</h1>
+    <flex-frame id="portable">
+        <input type="text" id="portable_ip" placeholder="IP Address">
+        <input type="number" id="portable_interval" placeholder="Interval (s)">
+        <input type="number" id="portable_limit" placeholder="Limit">
+        <button id="portable_go" onclick="start()">Go!</button>
+        <button id="portable_stop" onclick="stop()">Stop!</button>
+        <button id="portable_default" onclick="portable_ip.value = '192.168.1.150'">Default IP</button>
+    </flex-frame>
+    <br>
+    <flex-frame>
+        <stat-column>
+            <div class="fadebox" id="temperature_display">
+                -- &deg;C
+            </div>
+        </stat-column>
+        <stat-column>
+            <div class="fadebox" id="humidity_display">
+                -- %
+            </div>
+        </stat-column>
+    </flex-frame>
+    <br>
+    <flex-frame>
+        <canvas id="portable_chart"></canvas>
+    </flex-frame>
+</body>
+<script> // portable station code
+    let chart = newchart();
+    let blank = true;
+    let loggingid = null;
+
+    async function update(portable_chart) {
+        // server must have cors enabled
+        var response = await fetch("http://"+portable_ip.value+"/temperature");
+        var temperature = await response.text();
+        temperature = Number.parseFloat(temperature).toFixed(1);
+
+        var response = await fetch("http://"+portable_ip.value+"/humidity");
+        var humidity = await response.text();
+        humidity = Number.parseFloat(humidity).toFixed(1);
+
+        portable_chart.data.datasets[0].data.push(temperature);
+        portable_chart.data.datasets[1].data.push(humidity);
+        portable_chart.data.labels.push(Date.now());
+
+        temperature_display.innerHTML = temperature + " &deg;C";
+        humidity_display.innerHTML = humidity + " %RH";
+
+        if (portable_chart.data.labels.length > portable_limit.value) {
+            portable_chart.data.datasets[0].data.shift();
+            portable_chart.data.datasets[1].data.shift();
+            portable_chart.data.labels.shift();
+        }
+
+        console.log(portable_chart.data)
+        portable_chart.update('none');
+
+        // console.log(temperaturelist);
+        // console.log(humidity);
+    }
+
+    function newchart() {
+        var temperaturelist = [];
+        var humiditylist = [];
+        var timelist = [];
+
+        th_options = {
+            scales: {
+                humidity:{axis: 'y', id: 'humidity', type: 'linear', min:0, max:100, ticks:{min:0, max:100}, title: {display: true, text:"Humidity"}},
+                temp:{axis: 'y', id: 'temp', type: 'linear', min:0, max:50, ticks:{min:0, max:50}, title: {display: true, text:"Temperature"}},
+                time:{axis: 'x', id: 'time', type: "time"}
+            },
+            elements: {
+                line: {
+                    tension: 0.2
+                },
+                point: {
+                    radius: 0
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+
+        var chartdata = {
+            labels: [],
+            datasets : [
+                {
+                    label: 'Temperature (\u{00B0}C)',
+                    xAxisID: 'time',
+                    yAxisID: 'temp',
+                    borderColor: 'rgb(220, 161, 161)',
+                    fill: false,
+                    data: []
+                },
+                {
+                    label: 'Humidity (%RH)',
+                    xAxisID: 'time',
+                    yAxisID: 'humidity',
+                    borderColor: 'rgb(161, 161, 200)',
+                    fill: false,
+                    data: []
+                }
+            ]
+        };
+
+        var portable_chart = new Chart("portable_chart", {
+            type: "line",
+            data: chartdata,
+            options: th_options
+        });
+        return portable_chart;
+    }
+
+    function start() {
+        if (!blank) {
+            clearInterval(loggingid);
+            chart.destroy();
+            chart = newchart();
+        }
+        loggingid = setInterval(function(){update(chart)}, portable_interval.value*1000);
+
+    }
+</script>
+</html>

@@ -1,0 +1,121 @@
+html {
+    padding-left: 10%;
+    padding-right: 10%;
+    padding-top: 5%;
+    padding-bottom: 5%;
+}
+
+@keyframes greyfade {
+    from {background-color: rgb(192, 192, 192)};
+    to {background-color: rgb(161, 161, 161)};
+}
+
+h2 {
+    padding-left: 0.8em;
+    padding-right: 0.8em;
+    margin:0;
+    margin-top:0.5em;
+}
+
+.indicator {
+    padding: 0.8em;
+    text-align: center;
+    margin: 1em;
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+
+plain-frame {
+    background-color: rgb(225,225,225);
+    padding: 0.8em;
+    font-family: 'Consolas', 'Lucida Console', monospace;
+    display:block;
+}
+
+flex-box {
+    display: flex;
+}
+
+flex-frame {
+    display: flex;
+    background-color: rgb(225,225,225);
+    padding: 0.8em;
+    justify-content: space-around;
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+
+.heading {
+    background-color: rgb(225,225,225);
+    padding: 0.8em;
+    padding-left: 2em;
+    padding-right: 2em;
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+
+.fadebox{
+    padding: 0.8em;
+    text-align: center;
+    margin: 1em;
+
+    background-color: rgb(192, 192, 192);
+
+    /* animation-name: greyfade;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate-reverse; */
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+
+.linkbox:hover{
+    padding: 0.8em;
+    text-align: center;
+    margin: 1em;
+
+    background-color: rgb(173, 173, 173);
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+
+a {
+    color:black;
+    text-decoration: none;
+    flex-grow: 1;
+    position: center;
+    padding: 0.8em;
+    text-align: center;
+    margin: 1em;
+    background-color: rgb(192, 192, 192);
+    font-family: 'Consolas', 'Lucida Console', monospace;
+}
+a:hover{
+    background-color: rgb(173, 173, 173);
+}
+
+stat-column {
+    flex-grow: 1;
+    position: center;
+}
+
+.flex_contents { 
+    flex-grow: 1;
+    position: center;
+}
+
+@keyframes wheel {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    display: inline-block;
+    background: rgb(116, 116, 228);
+    width: 5px;
+    height: 15px;
+    animation-iteration-count: infinite;
+    animation-name: wheel;
+    animation-timing-function: linear;
+    margin-right:5%;
+}
