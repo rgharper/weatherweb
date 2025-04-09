@@ -4,6 +4,9 @@
 <head>
     <title>Weather Station</title>
     <script src="historical.js" type="text/javascript"></script>
+    <script src= "loadCharts.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" integrity="sha512-ZwR1/gSZM3ai6vCdI+LVF1zSq/5HznD3ZSTk7kajkaj4D292NLuduDCO1c/NT8Id+jE58KYLKT7hXnbtryGmMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <meta charset="utf-8">
     <link rel="icon" href="weather.svg" sizes="any" type="image/svg+xml">
@@ -27,17 +30,78 @@
         </stat-column>
     </flex-frame>
     <br>
+        <h1 class=heading>Inside Data</h1>
+    <br>
     <flex-frame>
-        
+        <canvas id="inside_th_chart"></canvas>
+    </flex-frame>
+    <br>
+    <div class=heading>
+        <h1>Outside Data</h1>
+    </div>
+    <br>
+    <flex-frame>
+        <canvas id="outside_th_chart"></canvas>
     </flex-frame>
     <br>
     <flex-frame>
-        
+        <canvas id="outside_w_chart"></canvas>
     </flex-frame>
-    <br>
-    <flex-frame>
-        
-    </flex-frame>
-</body>
+    <h1 class="heading">Records</h1>
+    <plain-frame id="records">
+        <h2>Temperature</h2>
+        <br>
+        <table id="temperature_records"></table>
+    </plain-frame>
+<script>
+    function load(){
+        Chart.helpers.each(Chart.instances, function(instance){instance.destroy()})
+        var from = new Date(document.getElementById("from-input").value).valueOf();
+        var to = new Date(document.getElementById("to-input").value).valueOf();
+        update_charts(from, to);
+    }
+    // load temperature records
+    temperature_records()
+    async function temperature_records() {
+        var request = await fetch("historical.php")
+        var records = await request.json()
+        var table = document.getElementById("temperature_records")
+        for (const [year, ydata] of Object.entries(records)) {
+            let element = document.createElement("tr")
+            let title = document.createElement("th")
+            title.textContent = year
+            title.style.columnSpan = 3
+            element.appendChild(title)
+            table.appendChild(element)
 
+            for (const [station, sdata] of Object.entries(ydata)) {
+                let element = document.createElement("tr")
+                let title = document.createElement("td")
+                title.textContent = station
+                title.style.columnSpan = 3
+                title.className = "tablesubhead"
+                element.appendChild(title)
+                table.appendChild(element)
+
+                sdata[0][2] = Number(sdata[0][1]) > Number(sdata[1][1]) ? "High" : "Low"
+                sdata[1][2] = Number(sdata[1][1]) > Number(sdata[0][1]) ? "High" : "Low"
+
+                for (let row of sdata) {
+                    let element = document.createElement("tr")
+                    let type = document.createElement("td")
+                    type.textContent = row[2]
+                    element.appendChild(type)
+                    let temperature = document.createElement("td")
+                    temperature.textContent = row[1]+"°C"
+                    element.appendChild(temperature)
+                    let timestamp = document.createElement("td")
+                    timestamp.textContent = row[0]
+                    element.appendChild(timestamp)
+                    table.append(element)
+                }
+            }
+        }
+    }
+</script>
+</body>
 </html>

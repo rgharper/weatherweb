@@ -119,3 +119,29 @@ stat-column {
     animation-timing-function: linear;
     margin-right:5%;
 }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    display:block;
+    margin-left:1.3em;
+}
+
+.tablesubhead {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+th {
+    font-weight: bold;
+    font-size: 1.3em;
+    text-align:left;
+}
+
+td {
+    padding-right:3em
+}
+
+h2 {
+    display:block;
+}

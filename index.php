@@ -14,7 +14,7 @@ $omax_temp = mysqli_fetch_assoc($result);
 $result = mysqli_query($mysqli, "SELECT temperature, timestamp FROM weatherstation.temperature_records WHERE stationId=\"Outside1\" AND YEAR(timestamp) = YEAR(NOW()) AND temperature IS NOT NULL ORDER BY temperature ASC LIMIT 1");
 $omin_temp = mysqli_fetch_assoc($result);
 
-$result = mysqli_query($mysqli, "SELECT NOW() - INTERVAL 1 YEAR");
+$result = mysqli_query($mysqli, "SELECT YEAR(NOW())");
 $year_ago = mysqli_fetch_assoc($result);
 
 $result->close();
@@ -56,6 +56,7 @@ function station_status($ip, $last_seen) {
         <meta charset="utf-8">
         <link rel="icon" href="weather.svg" sizes="any" type="image/svg+xml">
     </head>
+    <body>
     <flex-frame>
         <a href="index.php">Current</a>
         <a href="historical.html">Historical</a>
@@ -91,6 +92,8 @@ function station_status($ip, $last_seen) {
                 <div id="spinnerA" class="spinner"></div>
                 <div id="rpmA" style="display: inline">
                 </div> rpm
+                <div id="kmhA" style="display: inline">
+                </div> km/h
             </div>
             <div class="fadebox" id="wind_dir" style="animation-delay: 1000ms">
             </div>
@@ -99,6 +102,8 @@ function station_status($ip, $last_seen) {
                 Gust:
                 <div id="rpmB" style="display: inline">
                 </div> rpm
+                <div id="kmhB" style="display: inline">
+                </div> km/h
             </div>
         </stat-column>
     </flex-frame>
@@ -123,7 +128,7 @@ function station_status($ip, $last_seen) {
     <br>
     <div class=heading>
         <h1>Yearly Records</h1>
-        Since <?php echo $year_ago["NOW() - INTERVAL 1 YEAR"]?>
+        For <?php echo $year_ago["YEAR(NOW())"]?>
     </div>
     <br>
     <plain-frame>
@@ -186,12 +191,52 @@ function station_status($ip, $last_seen) {
         </flex-box>
     </plain-frame>
 <script>
+    // help with updating the charts
+
+    var interval = {
+    // to keep a reference to all the intervals
+    intervals : new Set(),
+    
+    // create another interval
+    make(...args) {
+        var newInterval = setInterval(...args);
+        this.intervals.add(newInterval);
+        return newInterval;
+    },
+
+    // clear a single interval
+    clear(id) {
+        this.intervals.delete(id);
+        return clearInterval(id);
+    },
+
+    // clear all intervals
+    clearAll() {
+        for (var id of this.intervals) {
+            this.clear(id);
+        }
+    }
+};
+    function stop() {
+        interval.clearAll
+        Chart.helpers.each(Chart.instances, function(instance){instance.destroy()})
+        chart = newchart();
+    }
+
+    function start(timer) {
+        interval.clearAll
+        Chart.helpers.each(Chart.instances, function(instance){instance.destroy()})
+        update_charts();
+        interval.make(update, timer);
+        // blank = false;
+    }
+
     insideip = "192.168.1.164:1100";
     outsideip = "192.168.1.165:1100";
     // stat updater
     update();
     update_charts();
-    setInterval(update, 1000);
+    interval.make(update, 1000);
     async function update() {
         // server must have cors enabled
         // inside temperature
@@ -223,11 +268,17 @@ function station_status($ip, $last_seen) {
         document.getElementById("out_humidity").innerHTML = humidity+"%";
 
         // wind
+        var response = await fetch("/windcal/factor.text");
+        var factor = Number.parseFloat(await response.text());
+
         var response = await fetch("http://"+outsideip+"/wind");
         var wind = await response.text();
         wind = wind.split(",");
         document.getElementById("rpmA").innerHTML = Number.parseFloat(wind[0]).toFixed(2);
         document.getElementById("rpmB").innerHTML = Number.parseFloat(wind[1]).toFixed(2);
+        
+        document.getElementById("kmhA").innerHTML = Number.parseFloat(wind[0]*factor).toFixed(2);
+        document.getElementById("kmhB").innerHTML = Number.parseFloat(wind[1]*factor).toFixed(2);
 
         const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
         if (wind[0]<1) {
@@ -240,12 +291,18 @@ function station_status($ip, $last_seen) {
         // station status
         var response = await fetch("stationStatus.php");
         var status = await response.json();
-        in_delta = (Date.now()/1000) - status["in_last_update"];
-        out_delta = (Date.now()/1000) - status["out_last_update"];
 
-        if (in_delta.toFixed(0) >= 600 || out_delta.toFixed(0) >= 600) {
-            update_charts();
-        }
+        // stupid stupid time zones
+        const tzoffset = (new Date().getTimezoneOffset())*60;
+        const now = ((Date.now()/1000)-tzoffset);
+
+        in_delta = now - status["in_last_update"];
+        out_delta = now - status["out_last_update"];
+
+        // if (in_delta.toFixed(0) >= 600 || out_delta.toFixed(0) >= 600) {
+
+        //     start(update, 1000)
+        // }
 
         if (status["in_status"] == 0) {
             inside_status.innerHTML = "Updated "+in_delta.toFixed(0)+"s ago";
@@ -272,5 +329,5 @@ function station_status($ip, $last_seen) {
         }
     }
 </script>
-
+</body>
 </html>

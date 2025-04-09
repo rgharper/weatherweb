@@ -23,8 +23,3 @@ var changed = function (){
     length = document.getElementById("length")
     length.textContent = delta + unit
 }
-
-var load = function (){
-    var from = new Date(document.getElementById("from-input").value)
-    var to = new Date(document.getElementById("to-input").value)
-}
